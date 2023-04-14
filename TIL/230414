@@ -1,0 +1,39 @@
+## 오늘 해야할 것 ✅
+
+- Node.js 입문주차 1주차 강의 공부( 총27강 )
+
+## 오늘 학습목표 ✏️
+
+- Node.js 입문주차 1주차 강의 내일까지 완강을 목표로 금일15강까지 목표 ( 총 27강)
+
+## 오늘 학습내용 📖
+
+- node.js란?
+- **[동기(Sync) & 비동기(Async), Blocing Model & Non-Blocking Modle, 비동기 함수 (Async Function)](https://velog.io/@rkdwnstjr16/%EB%8F%99%EA%B8%B0Sync-%EB%B9%84%EB%8F%99%EA%B8%B0Async)**
+- **[동기(Sync) & 비동기(Async), Blocing Model & Non-Blocking Modle, 프로미스(Promise), 비동기 함수 (Async Function)](https://velog.io/@rkdwnstjr16/%EB%8F%99%EA%B8%B0Sync-%EB%B9%84%EB%8F%99%EA%B8%B0Async)**
+- **[Error handling ( try / catch, throw, finally )](https://velog.io/@rkdwnstjr16/Error-handling-try-catch-throw-finally)**
+- **[Class, 생성자(Constructor),this와 Propety(프로퍼티),메서드(Method),상속,super()](https://velog.io/@rkdwnstjr16/Class)**
+
+## 부족했던 점 , 질문사항⚠️
+
+- 프로미스(Promise)의 개념을 확실히 이해하지 못함.
+- Node.js 즉, 자바스크립트는 Async + Non-Blocking Model를 채용하여 현재 실행중인 코드의 실행이 끝나지 않아도 코드를 호출한다 했는데, 왜 비동기 함수(Async Function)를 사용하는가 await 연산자를 비동기 함수 안에서만 사용할 수 있어서라는 비동기 함수를 쓰는 이유가 있긴한데 이미 자바스크립트는 비동기(Async)인데 왜 굳이 다시 비동기함수를 선언해서 쓰는가…
+- 많이 못했다 목표량을 채우지 못함 컨디션이 안좋았다
+
+## 요약 👏
+
+- Node.js의 기초를 배움
+
+## 오늘의 배움 정리 📚
+
+- **[동기(Sync) & 비동기(Async), Blocing Model & Non-Blocking Modle, 비동기 함수 (Async Function)](https://velog.io/@rkdwnstjr16/%EB%8F%99%EA%B8%B0Sync-%EB%B9%84%EB%8F%99%EA%B8%B0Async)**
+- **[동기(Sync) & 비동기(Async), Blocing Model & Non-Blocking Modle, 프로미스(Promise), 비동기 함수 (Async Function)](https://velog.io/@rkdwnstjr16/%EB%8F%99%EA%B8%B0Sync-%EB%B9%84%EB%8F%99%EA%B8%B0Async)**
+- **[Error handling ( try / catch, throw, finally )](https://velog.io/@rkdwnstjr16/Error-handling-try-catch-throw-finally)**
+- **[Class, 생성자(Constructor),this와 Propety(프로퍼티),메서드(Method),상속,super()](https://velog.io/@rkdwnstjr16/Class)**
+    
+    
+
+## GitHub 📘
+
+- https://github.com/junseok1925/Node.js
+- https://github.com/junseok1925/TIL-WIL
