@@ -1,0 +1,172 @@
+## 오늘 해야할 것 ✅
+
+- acccesToken, refreshToken
+- redis
+
+## [16조 미니프로젝트 S.A ](https://www.notion.so/16-S-A-0c1308a4bf7e4b8b9cd467d306254bc0)
+
+- 롤링 페이퍼 구현
+- 사용자는 회원가입과 로그인을 해야지만 사용할 수 있다
+- 롤링 페이퍼의 재미를 위해 상대방에게 쓴 댓글은 수정, 삭제 불가능
+
+## Token.js
+
+```jsx
+const jwt = require("jsonwebtoken");
+
+const SECRET_KEY = "longlling-paper-key";
+const tokenObject = {}; // Refresh Token을 저장할 Object
+
+// userId를 매개변수로 받아 새로운 accessToken와 refreshToken을 생성
+// 반환된 변수들은 로그인 및 인증 과정에서 쿠키에 저장되어 클라이언트와 서버 간의 인증에 활용
+function setToken(userId) {
+  const accessToken = createAccessToken(userId);
+  const refreshToken = createRefreshToken();
+
+  tokenObject[refreshToken] = userId; // Refresh Token을 가지고 해당 유저의 정보를 서버에 저장합니다.
+
+  return { accessToken, refreshToken };
+}
+
+// 해당 함수는 userId를 인자로 받아 JWT(access token)를 생성하는 함수
+// 생성된 JWT에는 userId가 저장되고 만료시간을 지정
+// 2h 뒤 만료
+function createAccessToken(userId) {
+  return jwt.sign({ userId }, SECRET_KEY, { expiresIn: "2h" });
+}
+// 빈 객체 {}를 SECRET_KEY를 이용해 JSON Web Token으로 변환
+// 7일뒤 만료
+function createRefreshToken() {
+  return jwt.sign({}, SECRET_KEY, { expiresIn: "7d" }); // Refresh Token 7일뒤 만료
+}
+// accessToken이 유효한지 검사하기
+function validAccessToken(accessToken) {
+  try {
+    jwt.verify(accessToken, SECRET_KEY);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+//refreshToken이 유효한지 검사하기
+function validRefreshToken(refreshToken) {
+  try {
+    jwt.verify(refreshToken, SECRET_KEY);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+module.exports = {
+  setToken,
+  createAccessToken,
+  createRefreshToken,
+  validAccessToken,
+  validRefreshToken,
+};
+
+// 정리
+// 1. setToken 함수가 실행.
+// 2. userId를 인자로 받아서 createAccessToken 함수와 createRefreshToken 함수를 호출한다.
+// 3. createAccessToken 함수는 userId를 이용해 accessToken을 생성하고, expiresIn 옵션을 이용해 만료시간을 10초로 설정된다.
+// 4. createRefreshToken 함수는 빈 객체 {}를 이용해 refreshToken을 생성하고, expiresIn 옵션을 이용해 만료시간을 7일로 설정된다.
+// 5. setToken 함수는 생성된 accessToken과 refreshToken을 반환, refreshToken을 서버에 저장하기 위해 tokenObject[refreshToken] = userId 코드를 실행한다.
+```
+
+## auth-middleware.js
+
+```jsx
+const jwt = require("jsonwebtoken");
+const { Users } = require("../models");
+const {
+  createAccessToken,
+  validAccessToken,
+  validRefreshToken,
+} = require("./token");
+
+module.exports = async (req, res, next) => {
+  const { accessToken, refreshToken } = req.cookies;
+
+  // null 병합 문자열 : 왼쪽의 값이 비었거나 null일 경우 오른쪽 값으로 대치해준다
+  // -> 기존엔 Bearer인증을 사용해서 토큰을 전달 받았지만, 이제는 cookie를 사용해서 accToken과 refToken을 전달 받기때문에 필요없다
+  // const [authType, authToken] = (Authorization ?? "").split(" ");
+
+  // 엑세스 토큰과 리프레시 토큰이 모두 존재하고 있는지 확 즉,없으면 로그인상태가 아님
+  if (!accessToken || !refreshToken) {
+    res.status(403).json({
+      errorMessage: "로그인이 필요한 기능입니다.",
+    });
+    return; // 다음 코드로 진행을 막는다
+  }
+
+  // accessToken이 유효하지 않으면, refreshToken에 저장된 사용자 userId를 이용해 새로운 accessToken 생성해주기
+  if (!validAccessToken(accessToken)) {
+    const { userId } = jwt.verify(refreshToken, "longlling-paper-key");
+    const newAccessToken = createAccessToken(userId);
+    res.cookie("accessToken", newAccessToken);
+  }
+
+  // 리프레시 토큰이 유효한지 확인
+  if (!validRefreshToken(refreshToken)) {
+    res.status(419).json({
+      errorMessage: "Refresh Token이 만료되었습니다.",
+    });
+    return;
+  }
+
+  try {
+    // accessToken 검증
+    const { userId } = jwt.verify(accessToken, "longlling-paper-key");
+
+    // DB userId로 사용자가 있는지 확인
+    const user = await Users.findOne({ where: { userId } });
+    res.locals.user = user;
+    next();
+  } catch (error) {
+    console.error(error);
+    res.status(403).json({ errorMessage: "전달된 Token에 오류가 있습니다." });
+    return;
+  }
+};
+```
+
+## login.router.js
+
+- 로그인 구현에서 jwt토큰이 아닌 이제 accessToken, refreshToken을 발급
+
+```jsx
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await Users.findOne({ where: { email } });
+
+    // #412 해당하는 유저가 존재하지 않는 경우
+    // nickname과 password 예외처리를 묶어서 한번에 하는 이유
+    // -> nickname과 password를 따로 예외처리를 하면 해킹 당할 확률이 높기 때문, 둘 중 무엇이 오류인지 알려주지않음
+    if (!user || user.password !== password) {
+      res.status(412).json({
+        errorMessage: "이메일 또는 패스워드를 확인해주세요.",
+      });
+      return;
+    }
+      // setToken 함수를 사용하여 accessToken과 refreshToken을 생성합니다.
+      const { accessToken, refreshToken } = setToken(user.userId);
+
+      res.cookie("accessToken", accessToken);
+      res.cookie("refreshToken", refreshToken);
+
+    return res.status(200).json({ message: "로그인에 성공했습니다."}  );
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({
+      errorMessage: "로그인에 실패하였습니다.",
+    });
+  }
+});
+```
+
+## GitHub 📘
+
+- https://github.com/junseok1925/Mini_Project_Longlling_Paper.git
+- https://github.com/junseok1925/TIL-WIL
